@@ -210,3 +210,273 @@ body {
   color: #334155;
   white-space: pre-wrap;
 }
+
+.upload-box {
+  border: 2px dashed #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.upload-box:hover {
+  border-color: #6366f1;
+}
+
+.upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6366f1;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.upload-icon {
+  font-size: 18px;
+}
+
+.upload-divider {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 8px 0;
+}
+
+.results {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.score-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 28px;
+  text-align: center;
+}
+
+.score-label {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.score-number {
+  font-size: 56px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.score-bar-bg {
+  background: #f1f5f9;
+  border-radius: 100px;
+  height: 8px;
+  margin: 0 auto 12px;
+  max-width: 400px;
+}
+
+.score-bar-fill {
+  height: 8px;
+  border-radius: 100px;
+  transition: width 1s ease;
+}
+
+.score-hint {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 8px 18px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 100px;
+  background: #ffffff;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+.tab-btn.active {
+  background: #6366f1;
+  color: #ffffff;
+  border-color: #6366f1;
+}
+
+.tab-content {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skills-box {
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.matched {
+  background: #f0fdf4;
+}
+
+.missing {
+  background: #fff7ed;
+}
+
+.skills-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.matched .skills-title {
+  color: #15803d;
+}
+
+.missing .skills-title {
+  color: #c2410c;
+}
+
+.skill-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 13px;
+  margin: 4px 4px 4px 0;
+}
+
+.matched-tag {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.missing-tag {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.improvement-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.improvement-before {
+  background: #fff5f5;
+  padding: 16px;
+  font-size: 14px;
+  color: #dc2626;
+  line-height: 1.6;
+}
+
+.improvement-after {
+  background: #f0fdf4;
+  padding: 16px;
+  font-size: 14px;
+  color: #16a34a;
+  line-height: 1.6;
+}
+
+.improvement-arrow {
+  text-align: center;
+  padding: 8px;
+  background: #f8fafc;
+  font-size: 18px;
+  color: #94a3b8;
+}
+
+.improvement-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.before-label {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+.after-label {
+  background: #bbf7d0;
+  color: #16a34a;
+}
+
+.cover-letter-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cover-letter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cover-letter-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cover-letter-text {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+.interview-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 12px;
+}
+
+.interview-question {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 10px;
+}
+
+.interview-tip {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.7;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #6366f1;
+}

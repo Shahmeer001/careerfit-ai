@@ -1,11 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import anthropic
+from groq import AsyncGroq
+import fitz  # PyMuPDF
 import os
+import json
 from dotenv import load_dotenv
 
-load_dotenv()
+from pathlib import Path
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 app = FastAPI()
 
@@ -17,59 +20,98 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
+
 
 class AnalyzeRequest(BaseModel):
     job_description: str
     resume_text: str
 
+
 @app.get("/")
 def root():
     return {"status": "CareerFit AI API is running"}
 
+
+@app.post("/upload-resume")
+async def upload_resume(file: UploadFile = File(...)):
+    content = await file.read()
+    doc = fitz.open(stream=content, filetype="pdf")
+    text = ""
+    for page in doc:
+        text += page.get_text() + "\n"
+    doc.close()
+    return {"resume_text": text.strip()}
+
+
 @app.post("/analyze")
 async def analyze(req: AnalyzeRequest):
     system_prompt = """You are an expert career coach and professional 
-    resume writer with 15 years of experience helping candidates land 
-    jobs at top companies. You give specific, actionable, honest feedback.
-    Never be vague. Always be direct and helpful."""
+    resume writer with 15 years of experience. You give specific, 
+    actionable, honest feedback. Always return valid JSON only."""
 
     user_message = f"""
-    Analyze my job application fit.
-    
+    Analyze this job application and return ONLY a valid JSON object.
+    No extra text before or after. No markdown. Just the JSON.
+
     JOB DESCRIPTION:
     ---
     {req.job_description}
     ---
-    
+
     MY RESUME:
     ---
     {req.resume_text}
     ---
-    
-    Give me:
-    1. A match score out of 100
-    2. Top 5 skills from the job description that appear in my resume
-    3. Top 5 skills from the job description MISSING from my resume
-    4. 2 specific suggestions to improve my resume for this role
-    
-    Be specific. Reference actual content from both documents.
+
+    Return this exact JSON structure:
+    {{
+      "match_score": <number 0-100>,
+      "matched_skills": ["skill1", "skill2", "skill3", "skill4", "skill5"],
+      "missing_skills": ["skill1", "skill2", "skill3", "skill4", "skill5"],
+      "resume_improvements": [
+        {{
+          "original": "original bullet point from resume",
+          "improved": "rewritten stronger version"
+        }},
+        {{
+          "original": "original bullet point from resume",
+          "improved": "rewritten stronger version"
+        }}
+      ],
+      "cover_letter": "full cover letter text here",
+      "interview_questions": [
+        {{
+          "question": "interview question here",
+          "tip": "how to answer this question"
+        }},
+        {{
+          "question": "interview question here",
+          "tip": "how to answer this question"
+        }},
+        {{
+          "question": "interview question here",
+          "tip": "how to answer this question"
+        }}
+      ]
+    }}
     """
 
-    message = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=1024,
-        system=system_prompt,
+    response = await client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        max_tokens=1500,
         messages=[
-            {
-                "role": "user",
-                "content": user_message
-            }
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
         ]
     )
 
-    return {
-        "result": message.content[0].text,
-        "input_tokens": message.usage.input_tokens,
-        "output_tokens": message.usage.output_tokens
-    }
+    raw = response.choices[0].message.content
+    raw = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"AI returned invalid JSON: {raw[:200]}")
+
+    return data
