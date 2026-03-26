@@ -1,5 +1,7 @@
 fastapi
 uvicorn
-anthropic
+groq
 python-dotenv
 pdfplumber
+supabase
+stripe
