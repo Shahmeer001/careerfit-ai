@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
+import Auth from "./Auth";
 import "./App.css";
 
 export default function App() {
+  const [session, setSession] = useState(null);
   const [jobDesc, setJobDesc] = useState("");
   const [resume, setResume] = useState("");
   const [result, setResult] = useState(null);
@@ -10,6 +13,42 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState("");
   const [activeTab, setActiveTab] = useState("skills");
+  const [isPro, setIsPro] = useState(false);
+
+  // Check if user is logged in on page load
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) checkProStatus(session.user.id);
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) checkProStatus(session.user.id);
+    });
+  }, []);
+
+  const checkProStatus = async (userId) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("is_pro")
+      .eq("id", userId)
+      .single();
+    if (data) setIsPro(data.is_pro);
+  };
+
+  const handleUpgrade = async () => {
+    const res = await fetch("http://127.0.0.1:8080/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: session.user.id,
+        email: session.user.email,
+      }),
+    });
+    const data = await res.json();
+    window.location.href = data.checkout_url;
+  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -48,18 +87,23 @@ export default function App() {
     try {
       const response = await fetch("http://127.0.0.1:8080/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // Send auth token so backend knows who is calling
+          "Authorization": `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           job_description: jobDesc,
           resume_text: resume,
         }),
       });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        setError(err.detail || `Server error: ${response.status}`);
+
+      if (response.status === 403) {
+        setError("You have used your 2 free analyses. Please upgrade to Pro.");
         setLoading(false);
         return;
       }
+
       const data = await response.json();
       setResult(data);
       setActiveTab("skills");
@@ -74,20 +118,34 @@ export default function App() {
   };
 
   const scoreColor = result
-    ? result.match_score >= 75
-      ? "#16a34a"
-      : result.match_score >= 50
-        ? "#d97706"
+    ? result.match_score >= 75 ? "#16a34a"
+      : result.match_score >= 50 ? "#d97706"
         : "#dc2626"
     : "#6366f1";
+
+  // Show auth screen if not logged in
+  if (!session) return <Auth />;
 
   return (
     <div className="app">
       <header className="header">
         <h1 className="header-title">CareerFit AI</h1>
-        <p className="header-subtitle">
-          Paste a job description and your resume — get instant AI feedback
-        </p>
+        <div className="header-right">
+          {isPro ? (
+            <span className="pro-badge">Pro</span>
+          ) : (
+            <button className="upgrade-btn" onClick={handleUpgrade}>
+              Upgrade to Pro — $9/mo
+            </button>
+          )}
+          <span className="user-email">{session.user.email}</span>
+          <button
+            className="signout-btn"
+            onClick={() => supabase.auth.signOut()}
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       <main className="main">
@@ -138,6 +196,13 @@ export default function App() {
           </div>
         </div>
 
+        {!isPro && (
+          <div className="free-banner">
+            You are on the free plan — 2 analyses included.
+            <span onClick={handleUpgrade}>Upgrade for unlimited access</span>
+          </div>
+        )}
+
         {error && <div className="error-box">{error}</div>}
 
         <button
@@ -150,42 +215,28 @@ export default function App() {
               <span className="spinner" />
               Analyzing your application...
             </span>
-          ) : (
-            "Analyze My Application"
-          )}
+          ) : "Analyze My Application"}
         </button>
 
         <p className="keyboard-hint">or press Ctrl + Enter</p>
 
-        {/* Results Dashboard */}
         {result && (
           <div className="results">
-
-            {/* Match Score */}
             <div className="score-card">
               <p className="score-label">Match Score</p>
               <p className="score-number" style={{ color: scoreColor }}>
                 {result.match_score}%
               </p>
               <div className="score-bar-bg">
-                <div
-                  className="score-bar-fill"
-                  style={{
-                    width: `${result.match_score}%`,
-                    background: scoreColor,
-                  }}
-                />
+                <div className="score-bar-fill" style={{ width: `${result.match_score}%`, background: scoreColor }} />
               </div>
               <p className="score-hint">
-                {result.match_score >= 75
-                  ? "Strong match — apply with confidence"
-                  : result.match_score >= 50
-                    ? "Decent match — a few gaps to address"
+                {result.match_score >= 75 ? "Strong match — apply with confidence"
+                  : result.match_score >= 50 ? "Decent match — a few gaps to address"
                     : "Weak match — significant gaps to close"}
               </p>
             </div>
 
-            {/* Tabs */}
             <div className="tabs">
               {["skills", "improvements", "cover_letter", "interview"].map((tab) => (
                 <button
@@ -201,7 +252,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Skills Tab */}
             {activeTab === "skills" && (
               <div className="tab-content">
                 <div className="skills-grid">
@@ -221,7 +271,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Resume Improvements Tab */}
             {activeTab === "improvements" && (
               <div className="tab-content">
                 {result.resume_improvements.map((item, i) => (
@@ -240,39 +289,30 @@ export default function App() {
               </div>
             )}
 
-            {/* Cover Letter Tab */}
             {activeTab === "cover_letter" && (
               <div className="tab-content">
                 <div className="cover-letter-box">
                   <div className="cover-letter-header">
                     <h3>Cover Letter</h3>
-                    <button
-                      className="copy-btn"
-                      onClick={() => navigator.clipboard.writeText(result.cover_letter)}
-                    >
-                      Copy
-                    </button>
+                    <button className="copy-btn" onClick={() => navigator.clipboard.writeText(result.cover_letter)}>Copy</button>
                   </div>
                   <p className="cover-letter-text">{result.cover_letter}</p>
                 </div>
               </div>
             )}
 
-            {/* Interview Prep Tab */}
             {activeTab === "interview" && (
               <div className="tab-content">
                 {result.interview_questions.map((item, i) => (
                   <div key={i} className="interview-card">
-                    <p className="interview-question">Q: {item.question}</p>
-                    <p className="interview-tip">💡 {item.tip}</p>
+                    <p className="interview-question">Q{i + 1}: {item.question}</p>
+                    <p className="interview-tip">{item.tip}</p>
                   </div>
                 ))}
               </div>
             )}
-
           </div>
         )}
-
       </main>
     </div>
   );

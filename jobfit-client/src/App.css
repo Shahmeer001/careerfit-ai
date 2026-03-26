@@ -480,3 +480,70 @@ body {
   border-radius: 8px;
   border-left: 3px solid #6366f1;
 }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.user-email {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.signout-btn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.signout-btn:hover {
+  background: #f1f5f9;
+}
+
+.pro-badge {
+  background: #6366f1;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+.upgrade-btn {
+  background: #6366f1;
+  color: #ffffff;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upgrade-btn:hover {
+  background: #4f46e5;
+}
+
+.free-banner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.free-banner span {
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 6px;
+  text-decoration: underline;
+}
