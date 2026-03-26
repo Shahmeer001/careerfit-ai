@@ -117,11 +117,13 @@ export default function App() {
     if (e.ctrlKey && e.key === "Enter") handleAnalyze();
   };
 
-  const scoreColor = result
-    ? result.match_score >= 75 ? "#16a34a"
-      : result.match_score >= 50 ? "#d97706"
-        : "#dc2626"
-    : "#6366f1";
+  const getScoreStatus = () => {
+    if (!result) return "default";
+    if (result.match_score >= 75) return "high";
+    if (result.match_score >= 50) return "medium";
+    return "low";
+  };
+  const scoreStatus = getScoreStatus();
 
   // Show auth screen if not logged in
   if (!session) return <Auth />;
@@ -224,11 +226,11 @@ export default function App() {
           <div className="results">
             <div className="score-card">
               <p className="score-label">Match Score</p>
-              <p className="score-number" style={{ color: scoreColor }}>
+              <p className={`score-number score-${scoreStatus}`}>
                 {result.match_score}%
               </p>
               <div className="score-bar-bg">
-                <div className="score-bar-fill" style={{ width: `${result.match_score}%`, background: scoreColor }} />
+                <div className={`score-bar-fill fill-${scoreStatus}`} style={{ width: `${result.match_score}%` }} />
               </div>
               <p className="score-hint">
                 {result.match_score >= 75 ? "Strong match — apply with confidence"
